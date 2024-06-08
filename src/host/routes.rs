@@ -1,6 +1,6 @@
-use axum::{routing::{get, post}, Router};
+use axum::{routing::get, Router};
 
-use super::web::{query, register};
+use super::web::query;
 
 pub trait SearchRouter {
     fn register_search_routes(self) -> Self;
@@ -9,6 +9,5 @@ pub trait SearchRouter {
 impl SearchRouter for Router {
     fn register_search_routes(self) -> Self {
         self.route("/search", get(query))
-            .route("/search/register", post(register))
     }
 }

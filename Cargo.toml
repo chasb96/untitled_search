@@ -21,6 +21,8 @@ host = [
     "dep:json_or_protobuf",
     "dep:or_status_code",
     "dep:log_unwrap",
+    "dep:users",
+    "dep:projects"
 ]
 client = ["dep:reqwest"]
 
@@ -43,3 +45,5 @@ async-channel = { version = "2.3.1", optional = true }
 json_or_protobuf = { git = "https://github.com/chasb96/json_or_protobuf", optional = true }
 or_status_code = { git = "https://github.com/chasb96/or_status_code", optional = true }
 log_unwrap = { git = "https://github.com/chasb96/log_unwrap", optional = true }
+users = { git = "https://github.com/chasb96/untitled_users", default-features = false, features = ["client"], optional = true }
+projects = { git = "https://github.com/chasb96/untitled_projects", default-features = false, features = ["client"], optional = true }
