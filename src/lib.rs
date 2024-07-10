@@ -1,5 +1,15 @@
-#[cfg(feature = "host")]
-pub mod host;
+use ::axum::{routing::get, Router};
+use routes::SearchRouter;
 
-#[cfg(feature = "client")]
-pub mod client;
+mod routes;
+mod health;
+mod configuration;
+mod web;
+mod repository;
+mod axum;
+
+pub fn router() -> Router {
+    Router::new()
+        .route("/health", get(health::health))
+        .register_search_routes()
+}

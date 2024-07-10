@@ -1,10 +1,13 @@
 use axum::{extract::Query, Json};
 use or_status_code::OrInternalServerError;
-use projects::client::axum::extractors::ProjectsClient;
 use serde::{Deserialize, Serialize};
 use axum::http::StatusCode;
-use users::client::axum::extractors::UsersClient;
 use futures::join;
+
+use crate::axum::extractors::project_search_repository::ProjectSearchRepositoryExtractor;
+use crate::axum::extractors::user_search_repository::UserSearchRepositoryExtractor;
+use crate::repository::users::{UserSearchRecord, UserSearchRepository};
+use crate::repository::projects::{ProjectSearchRecord, ProjectSearchRepository};
 
 #[derive(Deserialize)]
 pub struct Search {
@@ -29,7 +32,7 @@ pub enum SearchResultItem {
 #[derive(Serialize)]
 pub struct UserResult {
     #[serde(rename = "i")]
-    pub user_id: i32,
+    pub user_id: String,
     #[serde(rename = "u")]
     pub username: String,
     #[serde(rename = "s")]
@@ -46,8 +49,8 @@ pub struct ProjectResult {
     pub score: f32,
 }
 
-impl From<users::client::SearchRecord> for SearchResultItem {
-    fn from(record: users::client::SearchRecord) -> Self {
+impl From<UserSearchRecord> for SearchResultItem {
+    fn from(record: UserSearchRecord) -> Self {
         SearchResultItem::User(UserResult {
             user_id: record.user_id,
             username: record.username,
@@ -56,8 +59,8 @@ impl From<users::client::SearchRecord> for SearchResultItem {
     }
 }
 
-impl From<projects::client::SearchRecord> for SearchResultItem {
-    fn from(record: projects::client::SearchRecord) -> Self {
+impl From<ProjectSearchRecord> for SearchResultItem {
+    fn from(record: ProjectSearchRecord) -> Self {
         SearchResultItem::Project(ProjectResult {
             project_id: record.project_id,
             name: record.name,
@@ -67,47 +70,34 @@ impl From<projects::client::SearchRecord> for SearchResultItem {
 }
 
 pub async fn query(
-    users_client: UsersClient,
-    projects_client: ProjectsClient,
+    user_search_repository: UserSearchRepositoryExtractor,
+    project_search_repository: ProjectSearchRepositoryExtractor,
     Query(query): Query<Search>,
 ) -> Result<Json<SearchResult>, StatusCode> {
+    let query: Vec<&str> = query.query
+        .split(' ')
+        .collect();
+
     let (results, projects_results) = join!(
-        search_users(users_client, &query.query),
-        search_projects(projects_client, &query.query),
+        user_search_repository.query(&query),
+        project_search_repository.query(&query),
     );
 
-    let mut results = results.or_internal_server_error()?;
-    let mut projects_results = projects_results.or_internal_server_error()?;
+    let mut results: Vec<SearchResultItem> = results
+        .or_internal_server_error()?
+        .into_iter()
+        .map(SearchResultItem::from)
+        .collect();
+
+    let mut projects_results = projects_results
+        .or_internal_server_error()?
+        .into_iter()
+        .map(SearchResultItem::from)
+        .collect();
 
     results.append(&mut projects_results);
 
     Ok(Json(SearchResult {
         result: results,
     }))
-}
-
-async fn search_users(users_client: UsersClient, query: &str) -> Result<Vec<SearchResultItem>, StatusCode> {
-    Ok(
-        users_client
-            .search(&query)
-            .await
-            .or_internal_server_error()?
-            .records
-            .into_iter()
-            .map(SearchResultItem::from)
-            .collect()
-    )
-}
-
-async fn search_projects(projects_client: ProjectsClient, query: &str) -> Result<Vec<SearchResultItem>, StatusCode> {
-    Ok(
-        projects_client
-            .search(&query)
-            .await
-            .or_internal_server_error()?
-            .records
-            .into_iter()
-            .map(SearchResultItem::from)
-            .collect()
-    )
 }

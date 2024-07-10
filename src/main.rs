@@ -1,4 +1,4 @@
-use search::{self, host::router};
+use search::{self, router};
 
 use std::{env, error::Error};
 use axum::serve;
