@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-postgres
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: search-postgres
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: search-postgres
+    spec:
+      containers:
+      - name: search-postgres
+        image: postgres:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: search-postgres-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: search-postgres-credentials
+              key: password
+        - name: PGDATA
+          value: /pgdata
+        - name: POSTGRES_DB
+          value: search
+        volumeMounts:
+        - name: search-postgres
+          mountPath: /pgdata
+      volumes:
+        - name: search-postgres
+          persistentVolumeClaim:
+            claimName: search-postgres-volume-claim

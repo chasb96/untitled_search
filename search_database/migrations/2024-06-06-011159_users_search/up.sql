@@ -1,6 +1,3 @@
-CREATE EXTENSION pg_trgm;
-CREATE EXTENSION fuzzystrmatch;
-
 CREATE TABLE users_search (
     code VARCHAR(32) NOT NULL,
     user_id VARCHAR(16) NOT NULL,

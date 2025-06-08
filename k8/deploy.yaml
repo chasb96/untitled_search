@@ -23,3 +23,9 @@ spec:
         image: public.ecr.aws/l4v6k6q7/9c3de1338c9f1c8647ddd2fb7dd32856_search:latest
         ports:
         - containerPort: 80
+        env:
+        - name: SEARCH_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: search-postgres-credentials
+              key: connection-string

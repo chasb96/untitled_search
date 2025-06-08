@@ -1,13 +1,17 @@
-use axum::{extract::Query, Json};
+use axum::Json;
+use axum::extract::Query;
 use or_status_code::OrInternalServerError;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use serde::Deserialize;
 use axum::http::StatusCode;
 use futures::join;
 
 use crate::axum::extractors::project_search_repository::ProjectSearchRepositoryExtractor;
 use crate::axum::extractors::user_search_repository::UserSearchRepositoryExtractor;
-use crate::repository::users::{UserSearchRecord, UserSearchRepository};
-use crate::repository::projects::{ProjectSearchRecord, ProjectSearchRepository};
+use crate::repository::users::UserSearchRepository;
+use crate::repository::users::UserSearchRecord;
+use crate::repository::projects::ProjectSearchRepository;
+use crate::repository::projects::ProjectSearchRecord;
 
 #[derive(Deserialize)]
 pub struct Search {
